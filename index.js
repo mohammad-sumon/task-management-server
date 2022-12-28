@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
 
 const app = express();
@@ -19,20 +19,51 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run(){
     try{
         const taskCollection = client.db('taskManagement').collection('myTasks');
+        const completedTaskCollection = client.db('taskManagement').collection('completedTasks');
         
         app.get("/myTasks", async(req, res) => {
             const query = {};
             const cursor = taskCollection.find(query);
             const tasks = await cursor.toArray();
             res.send(tasks);
-        })
+        });
 
         app.post("/myTasks", async (req, res) => {
             const task = req.body;
             console.log(task);
             const result = await taskCollection.insertOne(task);
             res.send(result);
-        })
+        });
+
+        app.delete("/myTasks/:id", async(req, res) => {
+            const id = req.params.id;
+            const query = {_id: ObjectId(id)};
+            const result = await taskCollection.deleteOne(query);
+            // console.log(result);
+            res.send(result);
+        });
+
+        app.get("/completedTasks", async(req, res) => {
+            const query = {};
+            const cursor = completedTaskCollection.find(query);
+            const completed = await cursor.toArray();
+            res.send(completed);
+        });
+
+        app.post("/completedTasks", async(req, res) => {
+            const completedTask = req.body;
+            const result = await completedTaskCollection.insertOne(completedTask);
+            res.send(result);
+        });
+
+        app.delete("/completedTasks/:id", async(req, res) => {
+            const id = req.params.id;
+            const query = {_id: ObjectId(id)};
+            const result = await completedTaskCollection.deleteOne(query);
+            // console.log(result);
+            res.send(result);
+        });
+
     }
     finally{
 
